@@ -1,6 +1,7 @@
 .{
     .name = "Win2Sys",
     .version = "0.0.1",
+    .paths = .{ "." },
     .dependencies = .{
         .zigwin32 = .{
             .url = "https://github.com/marlersoft/zigwin32/archive/6777f1db221d0cb50322842f558f03e3c3a4099f.tar.gz",
