@@ -7,8 +7,7 @@ pub fn build(b: *std.Build) void {
         .branch = "main",
         .sha = "6777f1db221d0cb50322842f558f03e3c3a4099f",
     });
-    b.getInstallStep().dependOn(&zigwin32_repo.step);
-    const zigwin32 = b.addModule("zigwin32", .{
+    const zigwin32 = b.modules.get("zigwin32") orelse b.addModule("zigwin32", .{
         .source_file = .{
             .path = b.pathJoin(&.{ zigwin32_repo.path, "win32.zig" }),
         }
