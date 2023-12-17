@@ -101,8 +101,14 @@ pub fn elevate() Win2SysStatus {
     const parsed = int2Base95(&buf, win.teb().ProcessEnvironmentBlock.SessionId);
     if(parsed == null)
         return Win2SysStatus.Error;
-    if(win32.StartServiceA(svc, 2, @ptrCast(@constCast(&[_]?[*:0]u8{
+    var cwdBuf: [512]u8 = undefined; {
+        const len = win32.GetCurrentDirectoryA(512, @ptrCast(&cwdBuf));
+        if(len == 0)
+            return Win2SysStatus.Error;
+    }
+    if(win32.StartServiceA(svc, 3, @ptrCast(@constCast(&[_]?[*:0]u8{
         @ptrCast(&fileNameBuf),
+        @ptrCast(&cwdBuf),
         @ptrCast(parsed.?.ptr)
     }))) == win.FALSE)
         return Win2SysStatus.Error;
@@ -156,7 +162,7 @@ fn generateFakeName(buf: []u8) void {
 }
 
 
-fn attemptCreateProcess(processPath: ?[*:0]const u8, activeSessionId: u32) void {
+fn attemptCreateProcess(processPath: ?[*:0]const u8, cwdPath: ?[*:0]const u8, activeSessionId: u32) void {
     const procToken = blk: {
         var originalToken: ?win32.HANDLE = undefined;
         if(win32.OpenProcessToken(win.self_process_handle, win32.TOKEN_ACCESS_MASK.initFlags(.{
@@ -214,7 +220,7 @@ fn attemptCreateProcess(processPath: ?[*:0]const u8, activeSessionId: u32) void 
         win.FALSE, 
         @intFromEnum(win32.PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE), 
         null, 
-        null,
+        cwdPath,
         @ptrCast(@constCast(&startupInfo)),
         &procInfo) == win.FALSE)
         return;
@@ -238,8 +244,8 @@ fn ServiceCtrlHandler(ctrlCode: u32)  callconv(win.WINAPI) void {
 }
 
 fn serviceMain(dwNumServicesArgs: u32, lpServiceArgVectors: ?[*]?win32.PSTR) callconv(win.WINAPI) void {
-    if(dwNumServicesArgs == 3)
-        attemptCreateProcess(lpServiceArgVectors.?[1], parseNullTermInt(lpServiceArgVectors.?[2].?));
+    if(dwNumServicesArgs == 4)
+        attemptCreateProcess(lpServiceArgVectors.?[1], lpServiceArgVectors.?[2], parseNullTermInt(lpServiceArgVectors.?[3].?));
     const statusHandle = win32.RegisterServiceCtrlHandlerA(@ptrCast(&gFakeName), ServiceCtrlHandler);
     if(statusHandle == 0)
         std.process.exit(0);
