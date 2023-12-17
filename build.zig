@@ -6,9 +6,9 @@ pub fn build(b: *std.Build) void {
         .url = "https://github.com/marlersoft/zigwin32",
         .branch = "main",
         .sha = "6777f1db221d0cb50322842f558f03e3c3a4099f",
-        .fetch_enabled = true,
     });
-    const zigwin32 = b.createModule(.{
+    b.getInstallStep().dependOn(&zigwin32_repo.step);
+    const zigwin32 = b.addModule("zigwin32", .{
         .source_file = .{
             .path = b.pathJoin(&.{ zigwin32_repo.path, "win32.zig" }),
         }
@@ -48,5 +48,4 @@ pub fn build(b: *std.Build) void {
     }
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
-    b.installArtifact(exe);
 }
