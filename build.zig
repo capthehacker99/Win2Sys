@@ -6,6 +6,7 @@ pub fn build(b: *std.Build) void {
         .url = "https://github.com/marlersoft/zigwin32",
         .branch = "main",
         .sha = "6777f1db221d0cb50322842f558f03e3c3a4099f",
+        .fetch_enabled = true,
     });
     const zigwin32 = b.createModule(.{
         .source_file = .{
