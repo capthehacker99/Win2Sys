@@ -2,6 +2,7 @@ const std = @import("std");
 const GitRepoStep = @import("GitRepoStep.zig");
 
 pub fn build(b: *std.Build) !void {
+    const target = b.standardTargetOptions(.{});
     const zigwin32 = blk: {
         break :blk b.modules.get("zigwin32") orelse {
             const zigwin32_repo = GitRepoStep.create(b, .{
@@ -12,17 +13,17 @@ pub fn build(b: *std.Build) !void {
             var prog_node: std.Progress.Node = undefined;
             try zigwin32_repo.step.make(&prog_node);
             break :blk b.addModule("zigwin32", .{
-                .source_file = .{
+                .root_source_file = .{
                     .path = b.pathJoin(&.{ zigwin32_repo.path, "win32.zig" }),
                 }
             });
         };
     };
     const win2sys = b.addModule("win2sys", .{
-        .source_file = .{
+        .root_source_file = .{
             .path = "src/win2sys.zig",
         },
-        .dependencies = &.{
+        .imports = &.{
             .{
                 .name = "win32",
                 .module = zigwin32
@@ -34,16 +35,17 @@ pub fn build(b: *std.Build) !void {
             .path = "src/win2sys.zig"
         },
     });
-    tests.addModule("win32", zigwin32);
+    tests.root_module.addImport("win32", zigwin32);
     b.step("test", "Run library tests.").dependOn(&tests.step);
     const exe = b.addExecutable(.{
         .name = "Win2Sys Su",
         .root_source_file = .{
             .path = "example/su.zig"
         },
+        .target = target,
     });
-    exe.addModule("win32", zigwin32);
-    exe.addModule("win2sys", win2sys);
+    exe.root_module.addImport("win32", zigwin32);
+    exe.root_module.addImport("win2sys", win2sys);
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
     if (b.args) |args| {

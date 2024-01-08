@@ -31,14 +31,14 @@ sha_check: ShaCheck = .warn,
 fetch_enabled: bool,
 
 var cached_default_fetch_option: ?bool = null;
-pub fn defaultFetchOption(b: *std.build.Builder) bool {
+pub fn defaultFetchOption(b: *std.Build) bool {
     if (cached_default_fetch_option) |_| {} else {
         cached_default_fetch_option = if (b.option(bool, "fetch", "automatically fetch network resources")) |o| o else false;
     }
     return cached_default_fetch_option.?;
 }
 
-pub fn create(b: *std.build.Builder, opt: struct {
+pub fn create(b: *std.Build, opt: struct {
     url: []const u8,
     branch: ?[]const u8 = null,
     sha: []const u8,
@@ -49,7 +49,7 @@ pub fn create(b: *std.build.Builder, opt: struct {
     const result = b.allocator.create(GitRepoStep) catch @panic("memory");
     const name = std.fs.path.basename(opt.url);
     result.* = GitRepoStep{
-        .step = std.build.Step.init(.{
+        .step = std.Build.Step.init(.{
             .id = .custom,
             .name = "clone a git repository",
             .owner = b,
@@ -66,8 +66,8 @@ pub fn create(b: *std.build.Builder, opt: struct {
     return result;
 }
 
-// TODO: this should be included in std.build, it helps find bugs in build files
-fn hasDependency(step: *const std.build.Step, dep_candidate: *const std.build.Step) bool {
+// TODO: this should be included in std.Build, it helps find bugs in build files
+fn hasDependency(step: *const std.Build.Step, dep_candidate: *const std.Build.Step) bool {
     for (step.dependencies.items) |dep| {
         // TODO: should probably use step.loop_flag to prevent infinite recursion
         //       when a circular reference is encountered, or maybe keep track of
@@ -78,7 +78,7 @@ fn hasDependency(step: *const std.build.Step, dep_candidate: *const std.build.St
     return false;
 }
 
-fn make(step: *std.build.Step, prog_node: *std.Progress.Node) !void {
+fn make(step: *std.Build.Step, prog_node: *std.Progress.Node) !void {
     _ = prog_node;
     const self = @fieldParentPtr(GitRepoStep, "step", step);
 
@@ -166,7 +166,7 @@ fn checkSha(self: GitRepoStep) !void {
     }
 }
 
-fn run(builder: *std.build.Builder, argv: []const []const u8) !void {
+fn run(builder: *std.Build, argv: []const []const u8) !void {
     {
         var msg = std.ArrayList(u8).init(builder.allocator);
         defer msg.deinit();
@@ -202,7 +202,7 @@ fn run(builder: *std.build.Builder, argv: []const []const u8) !void {
 
 // Get's the repository path and also verifies that the step requesting the path
 // is dependent on this step.
-pub fn getPath(self: *const GitRepoStep, who_wants_to_know: *const std.build.Step) []const u8 {
+pub fn getPath(self: *const GitRepoStep, who_wants_to_know: *const std.Build.Step) []const u8 {
     if (!hasDependency(who_wants_to_know, &self.step))
         @panic("a step called GitRepoStep.getPath but has not added it as a dependency");
     return self.path;
