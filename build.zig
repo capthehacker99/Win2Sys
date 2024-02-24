@@ -1,24 +1,8 @@
 const std = @import("std");
-const GitRepoStep = @import("GitRepoStep.zig");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
-    const zigwin32 = blk: {
-        break :blk b.modules.get("zigwin32") orelse {
-            const zigwin32_repo = GitRepoStep.create(b, .{
-                .url = "https://github.com/marlersoft/zigwin32",
-                .branch = "main",
-                .sha = "6777f1db221d0cb50322842f558f03e3c3a4099f",
-            });
-            var prog_node: std.Progress.Node = undefined;
-            try zigwin32_repo.step.make(&prog_node);
-            break :blk b.addModule("zigwin32", .{
-                .root_source_file = .{
-                    .path = b.pathJoin(&.{ zigwin32_repo.path, "win32.zig" }),
-                }
-            });
-        };
-    };
+    const zigwin32 = b.modules.get("zigwin32") orelse b.dependency("zigwin32", .{}).module("zigwin32");
     const win2sys = b.addModule("win2sys", .{
         .root_source_file = .{
             .path = "src/win2sys.zig",
