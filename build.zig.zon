@@ -3,8 +3,8 @@
     .version = "0.0.1",
     .dependencies = .{
         .zigwin32 = .{
-            .url = "https://github.com/marlersoft/zigwin32/archive/master.tar.gz",
-            .hash = "12207523d070abaf0b3a078c58c8afbc5445f21e5779b7e2745514e34e0f90f10652",
+            .url = "https://github.com/marlersoft/zigwin32/archive/476e350ae965ba6376cbbb38cc5e433420233060.tar.gz",
+            .hash = "1220b721938503d8180a78d38f8b2276f089233043c3429dfa944ee82ee19a51bb6b",
         },
     },
     .paths = .{"."},
