@@ -4,9 +4,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const zigwin32 = b.modules.get("zigwin32") orelse b.dependency("zigwin32", .{}).module("zigwin32");
     const win2sys = b.addModule("win2sys", .{
-        .root_source_file = .{
-            .path = "src/win2sys.zig",
-        },
+        .root_source_file = b.path("src/win2sys.zig"),
         .imports = &.{
             .{
                 .name = "win32",
@@ -15,17 +13,13 @@ pub fn build(b: *std.Build) !void {
         }
     });
     const tests = b.addTest(.{
-        .root_source_file = .{
-            .path = "src/win2sys.zig"
-        },
+        .root_source_file = b.path("src/win2sys.zig"),
     });
     tests.root_module.addImport("win32", zigwin32);
     b.step("test", "Run library tests.").dependOn(&tests.step);
     const exe = b.addExecutable(.{
         .name = "Win2Sys Su",
-        .root_source_file = .{
-            .path = "example/su.zig"
-        },
+        .root_source_file = b.path("example/su.zig"),
         .target = target,
     });
     exe.root_module.addImport("win32", zigwin32);
