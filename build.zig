@@ -2,6 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
     const zigwin32 = b.modules.get("zigwin32") orelse b.dependency("zigwin32", .{}).module("zigwin32");
     const win2sys = b.addModule("win2sys", .{
         .root_source_file = b.path("src/win2sys.zig"),
@@ -21,6 +22,7 @@ pub fn build(b: *std.Build) !void {
         .name = "Win2Sys Su",
         .root_source_file = b.path("example/su.zig"),
         .target = target,
+        .optimize = optimize,
     });
     exe.root_module.addImport("win32", zigwin32);
     exe.root_module.addImport("win2sys", win2sys);
